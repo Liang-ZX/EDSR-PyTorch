@@ -1,6 +1,7 @@
 # EDSR baseline model (x2) + JPEG augmentation
-python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset
+#python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset --ext sep
 #python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset --data_train DIV2K+DIV2K-Q75 --data_test DIV2K+DIV2K-Q75
+#python main.py --model EDSR --scale 2 --patch_size 96 --test_only
 
 # EDSR baseline model (x3) - from EDSR baseline model (x2)
 #python main.py --model EDSR --scale 3 --patch_size 144 --save edsr_baseline_x3 --reset --pre_train [pre-trained EDSR_baseline_x2 model dir]
@@ -9,7 +10,8 @@ python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --
 #python main.py --model EDSR --scale 4 --save edsr_baseline_x4 --reset --pre_train [pre-trained EDSR_baseline_x2 model dir]
 
 # EDSR in the paper (x2)
-#python main.py --model EDSR --scale 2 --save edsr_x2 --n_resblocks 32 --n_feats 256 --res_scale 0.1 --reset
+python main.py --model EDSR --scale 2 --save edsr_x2 --n_resblocks 32 --n_feats 256 --res_scale 0.1 --n_GPUs 4 --reset
+#Set5+Set14+B100+Urban100
 
 # EDSR in the paper (x3) - from EDSR (x2)
 #python main.py --model EDSR --scale 3 --save edsr_x3 --n_resblocks 32 --n_feats 256 --res_scale 0.1 --reset --pre_train [pre-trained EDSR model dir]
@@ -38,7 +40,7 @@ python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --
 #python main.py --template GAN --scale 4 --save edsr_gan --reset --patch_size 96 --loss 5*VGG54+0.15*GAN --pre_train download
 
 # RDN BI model (x2)
-#python3.6 main.py --scale 2 --save RDN_D16C8G64_BIx2 --model RDN --epochs 200 --batch_size 16 --data_range 801-805 --patch_size 64 --reset
+#python main.py --scale 2 --save RDN_D16C8G64_BIx2 --model RDN --epochs 200 --batch_size 16 --data_range 1-800/801-805 --patch_size 64 --reset
 # RDN BI model (x3)
 #python3.6 main.py --scale 3 --save RDN_D16C8G64_BIx3 --model RDN --epochs 200 --batch_size 16 --data_range 801-805 --patch_size 96 --reset
 # RDN BI model (x4)

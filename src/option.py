@@ -15,11 +15,13 @@ parser.add_argument('--cpu', action='store_true',
                     help='use cpu only')
 parser.add_argument('--n_GPUs', type=int, default=1,
                     help='number of GPUs')
+parser.add_argument('--gpu_id', default="0",type=str,
+                    help='the gpu id of using')
 parser.add_argument('--seed', type=int, default=1,
                     help='random seed')
 
 # Data specifications
-parser.add_argument('--dir_data', type=str, default='../../../dataset',
+parser.add_argument('--dir_data', type=str, default='../dataset',
                     help='dataset directory')
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
