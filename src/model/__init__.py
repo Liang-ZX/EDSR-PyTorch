@@ -18,7 +18,7 @@ class Model(nn.Module):
         self.chop = args.chop
         self.precision = args.precision
         self.cpu = args.cpu
-        self.device = torch.device('cpu' if args.cpu else 'cuda')
+        self.device = torch.device('cpu' if args.cpu else f'cuda:{args.gpu_id}')
         self.n_GPUs = args.n_GPUs
         self.save_models = args.save_models
 
@@ -112,17 +112,17 @@ class Model(nn.Module):
         bottom = slice(h - h//2 - shave, h)
         left = slice(0, w//2 + shave)
         right = slice(w - w//2 - shave, w)
-        x_chops = [torch.cat([
+        x_chops = [[
             a[..., top, left],
             a[..., top, right],
             a[..., bottom, left],
             a[..., bottom, right]
-        ]) for a in args]
+        ] for a in args]
 
         y_chops = []
         if h * w < 4 * min_size:
             for i in range(0, 4, n_GPUs):
-                x = [x_chop[i:(i + n_GPUs)] for x_chop in x_chops]
+                x = [torch.cat(x_chop[i:(i + n_GPUs)], dim=0) for x_chop in x_chops]
                 y = P.data_parallel(self.model, *x, range(n_GPUs))
                 if not isinstance(y, list): y = [y]
                 if not y_chops:

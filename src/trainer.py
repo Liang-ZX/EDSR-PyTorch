@@ -13,6 +13,7 @@ class Trainer():
         self.args = args
         self.scale = args.scale
 
+        self.device = torch.device('cpu' if args.cpu else f'cuda:{args.gpu_id}')
         self.ckp = ckp
         self.loader_train = loader.loader_train
         self.loader_test = loader.loader_test
@@ -88,6 +89,7 @@ class Trainer():
                 d.dataset.set_scale(idx_scale)
                 for lr, hr, filename in tqdm(d, ncols=80):
                     lr, hr = self.prepare(lr, hr)
+                    torch.cuda.empty_cache()
                     sr = self.model(lr, idx_scale)
                     sr = utility.quantize(sr, self.args.rgb_range)
 
@@ -129,7 +131,7 @@ class Trainer():
         torch.set_grad_enabled(True)
 
     def prepare(self, *args):
-        device = torch.device('cpu' if self.args.cpu else 'cuda')
+        device = self.device
         def _prepare(tensor):
             if self.args.precision == 'half': tensor = tensor.half()
             return tensor.to(device)

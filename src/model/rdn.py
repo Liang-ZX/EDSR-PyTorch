@@ -63,7 +63,7 @@ class RDN(nn.Module):
         self.RDBs = nn.ModuleList()
         for i in range(self.D):
             self.RDBs.append(
-                RDB(growRate0 = G0, growRate = G, nConvLayers = C)
+                RDB(growRate0=G0, growRate=G, nConvLayers=C)
             )
 
         # Global Feature Fusion

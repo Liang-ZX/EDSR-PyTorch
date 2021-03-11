@@ -1,13 +1,15 @@
-## ECCV-2018-Image Super-Resolution Using Very Deep Residual Channel Attention Networks
-## https://arxiv.org/abs/1807.02758
+# ECCV-2018-Image Super-Resolution Using Very Deep Residual Channel Attention Networks
+# https://arxiv.org/abs/1807.02758
 from model import common
 
 import torch.nn as nn
 
+
 def make_model(args, parent=False):
     return RCAN(args)
 
-## Channel Attention (CA) Layer
+
+# Channel Attention (CA) Layer
 class CALayer(nn.Module):
     def __init__(self, channel, reduction=16):
         super(CALayer, self).__init__()
@@ -26,11 +28,12 @@ class CALayer(nn.Module):
         y = self.conv_du(y)
         return x * y
 
-## Residual Channel Attention Block (RCAB)
+
+# Residual Channel Attention Block (RCAB)
 class RCAB(nn.Module):
     def __init__(
         self, conv, n_feat, kernel_size, reduction,
-        bias=True, bn=False, act=nn.ReLU(True), res_scale=1):
+            bias=True, bn=False, act=nn.ReLU(True), res_scale=1):
 
         super(RCAB, self).__init__()
         modules_body = []
@@ -44,11 +47,12 @@ class RCAB(nn.Module):
 
     def forward(self, x):
         res = self.body(x)
-        #res = self.body(x).mul(self.res_scale)
+        # res = self.body(x).mul(self.res_scale)
         res += x
         return res
 
-## Residual Group (RG)
+
+# Residual Group (RG)
 class ResidualGroup(nn.Module):
     def __init__(self, conv, n_feat, kernel_size, reduction, act, res_scale, n_resblocks):
         super(ResidualGroup, self).__init__()
@@ -65,7 +69,8 @@ class ResidualGroup(nn.Module):
         res += x
         return res
 
-## Residual Channel Attention Network (RCAN)
+
+# Residual Channel Attention Network (RCAN)
 class RCAN(nn.Module):
     def __init__(self, args, conv=common.default_conv):
         super(RCAN, self).__init__()
