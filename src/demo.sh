@@ -58,10 +58,18 @@
 
 # RCAN_BIX2_G10R20P48, input=48x48, output=96x96
 # pretrained model can be downloaded from https://www.dropbox.com/s/mjbcqkd4nwhr6nu/models_ECCV2018RCAN.zip?dl=0
-#python main.py --template RCAN --save RCAN_BIX2_G10R20P48 --scale 2 --reset --patch_size 96 --gpu_id 1 --epochs 200
-#python statistics.py --template RCAN --scale 2 --patch_size 96 --test_only --gpu_id 1
-python main.py --template RCAN --scale 2 --patch_size 96 --test_only --pre_train ../pretrained/RCAN_BIX2.pt \
---data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --self_ensemble
+#python main.py --template RCAN --save RCAN_BIX2_G10R20P48 --scale 2 --reset --patch_size 96 --gpu_id 3 --epochs 200
+#python main.py --template RCAN --save RCAN_BIX2_C16G7R7_reduct4 --scale 2 --reset --patch_size 96 --epochs 300 --reduction 4
+#python main.py --template RCAN --save RCAN_BIX2_C16G7R7_CA_x4 --scale 4 --reset --patch_size 192 --epochs 300 --reduction 4
+#python statistics.py --template RCAN --scale 2 --patch_size 96 --reduction 4 --test_only --gpu_id 1
+
+#python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
+#--pre_train ../pretrained/RCAN_BIX2_G10R20_CA.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+#python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
+#--pre_train ../pretrained/RCAN_BIX2_C16G7R7_reduct4.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+#python main.py --template RCAN --scale 2 --patch_size 96 --test_only --pre_train ../pretrained/RCAN_BIX2.pt \
+#--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --self_ensemble
 
 # RCAN_BIX3_G10R20P48, input=48x48, output=144x144
 #python main.py --template RCAN --save RCAN_BIX3_G10R20P48 --scale 3 --reset --save_results --patch_size 144 --pre_train ../experiment/model/RCAN_BIX2.pt
@@ -69,4 +77,28 @@ python main.py --template RCAN --scale 2 --patch_size 96 --test_only --pre_train
 #python main.py --template RCAN --save RCAN_BIX4_G10R20P48 --scale 4 --reset --save_results --patch_size 192 --pre_train ../experiment/model/RCAN_BIX2.pt
 # RCAN_BIX8_G10R20P48, input=48x48, output=384x384
 #python main.py --template RCAN --save RCAN_BIX8_G10R20P48 --scale 8 --reset --save_results --patch_size 384 --pre_train ../experiment/model/RCAN_BIX2.pt
+
+# SplitSR
+python main.py --template SplitSR --save SplitSR_x2_C16G7R7_SE --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template SplitSR --save SplitSR_x2_C16G7R7P48 --scale 2 --reset --patch_size 96 --gpu_id 2 --epochs 400 --n_feats 16
+#python statistics.py --template SplitSR --scale 2 --patch_size 96 --test_only # --n_feats 16
+#python main.py --template SplitSR --scale 2 --patch_size 96 --gpu_id 1 --test_only --n_feats 16 \
+#--pre_train ../pretrained/SplitSR_x2_C16G7R7P48_beta_version.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+# MobileSR
+#python statistics.py --template MobileSR --scale 2 --patch_size 96 --test_only --gpu_id 0 --n_feats 16 --att_type CA # > ../model_param/InvertedBlock_x2_C16G7R7_CA.log
+#python main.py --template MobileSR --save InvertedBlock_x2_C16G7R7_SE --scale 2 --reset --patch_size 96 --gpu_id 1 --epochs 300 --n_feats 16 --att_type SE
+#python main.py --template MobileSR --save InvertedBlock_x2_C16G7R7_CA --scale 2 --reset --patch_size 96 --gpu_id 2 --epochs 300 --n_feats 16 --att_type CA
+
+#python main.py --template MobileSR --scale 2 --patch_size 96 --test_only --att_type SE \
+#--pre_train ../pretrained/MobileV3_x2_C16R7G7_SE_beta.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+#python statistics.py --template RCAN --scale 2 --patch_size 96 --test_only --gpu_id 1
+#python statistics.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 --gpu_id 2
+
+# ShuffleNet
+python main.py --template ShuffleNet --save ShuffleNet_x2_G10R20_SE --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template MobileSR --scale 2 --patch_size 96 --test_only \
+#--pre_train ../pretrained/ShuffleNet_x2_G10R20.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+#python statistics.py --template ShuffleNet --scale 2 --patch_size 96 --test_only
+
 

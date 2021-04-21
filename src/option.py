@@ -84,6 +84,19 @@ parser.add_argument('--n_resgroups', type=int, default=10,
 parser.add_argument('--reduction', type=int, default=16,
                     help='number of feature maps reduction')
 
+# Option for SplitSR
+parser.add_argument('--alpha_ratio', type=float, default=0.25,
+                    help='number of channel split ratio')
+parser.add_argument('--hybrid_index', type=int, default=3,
+                    help='number of hybrid index')
+
+parser.add_argument('--expand_ratio', type=int, default=6,
+                    help='number of expand ratio of inverted residual block')
+parser.add_argument('--att_reduct', type=int, default=4,
+                    help='number of attention(SE or CA) feature maps reduction')
+parser.add_argument('--att_type', type=str, default=None,
+                    help='attention block type (SE | CA | None)')
+
 # Training specifications
 parser.add_argument('--reset', action='store_true',
                     help='reset the training')

@@ -1,6 +1,7 @@
 # ECCV-2018-Image Super-Resolution Using Very Deep Residual Channel Attention Networks
 # https://arxiv.org/abs/1807.02758
 from model import common
+from model.coordatt import CoordAtt
 
 import torch.nn as nn
 
@@ -17,10 +18,10 @@ class CALayer(nn.Module):
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         # feature channel downscale and upscale --> channel weight
         self.conv_du = nn.Sequential(
-                nn.Conv2d(channel, channel // reduction, 1, padding=0, bias=True),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(channel // reduction, channel, 1, padding=0, bias=True),
-                nn.Sigmoid()
+            nn.Conv2d(channel, channel // reduction, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel // reduction, channel, 1, padding=0, bias=True),
+            nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -32,7 +33,7 @@ class CALayer(nn.Module):
 # Residual Channel Attention Block (RCAB)
 class RCAB(nn.Module):
     def __init__(
-        self, conv, n_feat, kernel_size, reduction,
+            self, conv, n_feat, kernel_size, reduction,
             bias=True, bn=False, act=nn.ReLU(True), res_scale=1):
 
         super(RCAB, self).__init__()
@@ -41,7 +42,8 @@ class RCAB(nn.Module):
             modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
             if bn: modules_body.append(nn.BatchNorm2d(n_feat))
             if i == 0: modules_body.append(act)
-        modules_body.append(CALayer(n_feat, reduction))
+        # modules_body.append(CALayer(n_feat, reduction))
+        modules_body.append(CoordAtt(n_feat, n_feat, reduction))
         self.body = nn.Sequential(*modules_body)
         self.res_scale = res_scale
 
@@ -74,18 +76,18 @@ class ResidualGroup(nn.Module):
 class RCAN(nn.Module):
     def __init__(self, args, conv=common.default_conv):
         super(RCAN, self).__init__()
-        
+
         n_resgroups = args.n_resgroups
         n_resblocks = args.n_resblocks
         n_feats = args.n_feats
         kernel_size = 3
-        reduction = args.reduction 
+        reduction = args.reduction
         scale = args.scale[0]
         act = nn.ReLU(True)
-        
+
         # RGB mean for DIV2K
         self.sub_mean = common.MeanShift(args.rgb_range)
-        
+
         # define head module
         modules_head = [conv(args.n_colors, n_feats, kernel_size)]
 
@@ -118,7 +120,7 @@ class RCAN(nn.Module):
         x = self.tail(res)
         x = self.add_mean(x)
 
-        return x 
+        return x
 
     def load_state_dict(self, state_dict, strict=False):
         own_state = self.state_dict()

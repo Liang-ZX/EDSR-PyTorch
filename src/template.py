@@ -39,10 +39,32 @@ def set_template(args):
 
     if args.template.find('RCAN') >= 0:
         args.model = 'RCAN'
+        args.n_resgroups = 10 #10
+        args.n_resblocks = 20 #20
+        args.n_feats = 16 #64
+        args.chop = True
+
+    if args.template.find('SplitSR') >= 0:
+        args.model = 'SplitSR'
+        args.n_resgroups = 7
+        args.n_resblocks = 7
+        args.n_feats = 16
+        args.alpha_ratio = 0.25
+        args.hybrid_index = 3
+
+    if args.template.find('MobileSR') >= 0:
+        args.model = 'MobileSR'
+        args.n_resgroups = 7
+        args.n_resblocks = 7
+        args.expand_ratio = 6
+        args.n_feats = 16
+
+    if args.template.find('ShuffleNet') >= 0:
+        args.model = 'ShuffleNet'
         args.n_resgroups = 10
         args.n_resblocks = 20
-        args.n_feats = 64
-        args.chop = True
+        args.n_feats = 16
+        args.alpha_ratio = 0.5
 
     if args.template.find('VDSR') >= 0:
         args.model = 'VDSR'
