@@ -2,6 +2,7 @@
 # https://arxiv.org/abs/1807.02758
 from model import common
 from model.coordatt import CoordAtt
+from model.se_attention import StdLayer
 
 import torch.nn as nn
 
@@ -43,7 +44,8 @@ class RCAB(nn.Module):
             if bn: modules_body.append(nn.BatchNorm2d(n_feat))
             if i == 0: modules_body.append(act)
         # modules_body.append(CALayer(n_feat, reduction))
-        modules_body.append(CoordAtt(n_feat, n_feat, reduction))
+        # modules_body.append(CoordAtt(n_feat, n_feat, reduction))
+        modules_body.append(StdLayer(n_feat, reduction))
         self.body = nn.Sequential(*modules_body)
         self.res_scale = res_scale
 

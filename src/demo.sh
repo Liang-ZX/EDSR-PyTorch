@@ -63,6 +63,8 @@
 #python main.py --template RCAN --save RCAN_BIX2_C16G7R7_CA_x4 --scale 4 --reset --patch_size 192 --epochs 300 --reduction 4
 #python statistics.py --template RCAN --scale 2 --patch_size 96 --reduction 4 --test_only --gpu_id 1
 
+python main.py --template RCAN --save RCAN_BIX2_C16G7R7_Std --scale 2 --reset --patch_size 96 --epochs 300
+
 #python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
 #--pre_train ../pretrained/RCAN_BIX2_G10R20_CA.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
 #python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
@@ -79,11 +81,11 @@
 #python main.py --template RCAN --save RCAN_BIX8_G10R20P48 --scale 8 --reset --save_results --patch_size 384 --pre_train ../experiment/model/RCAN_BIX2.pt
 
 # SplitSR
-python main.py --template SplitSR --save SplitSR_x2_C16G7R7_SE --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template SplitSR --save SplitSR_x2_C16G7R7_SE --scale 2 --reset --patch_size 96 --epochs 300
 #python main.py --template SplitSR --save SplitSR_x2_C16G7R7P48 --scale 2 --reset --patch_size 96 --gpu_id 2 --epochs 400 --n_feats 16
 #python statistics.py --template SplitSR --scale 2 --patch_size 96 --test_only # --n_feats 16
-#python main.py --template SplitSR --scale 2 --patch_size 96 --gpu_id 1 --test_only --n_feats 16 \
-#--pre_train ../pretrained/SplitSR_x2_C16G7R7P48_beta_version.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+#python main.py --template SplitSR --scale 2 --patch_size 96 --test_only \
+#--pre_train ../pretrained/SplitSR_x2_C16G7R7_SE.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
 
 # MobileSR
 #python statistics.py --template MobileSR --scale 2 --patch_size 96 --test_only --gpu_id 0 --n_feats 16 --att_type CA # > ../model_param/InvertedBlock_x2_C16G7R7_CA.log
@@ -96,9 +98,13 @@ python main.py --template SplitSR --save SplitSR_x2_C16G7R7_SE --scale 2 --reset
 #python statistics.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 --gpu_id 2
 
 # ShuffleNet
-python main.py --template ShuffleNet --save ShuffleNet_x2_G10R20_SE --scale 2 --reset --patch_size 96 --epochs 300
-#python main.py --template MobileSR --scale 2 --patch_size 96 --test_only \
-#--pre_train ../pretrained/ShuffleNet_x2_G10R20.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+#python main.py --template ShuffleNet --save ShuffleNet_x2_G10R20_SE --scale 2 --reset --patch_size 96 --epochs 300
+python main.py --template ShuffleNet --scale 2 --patch_size 96 --test_only \
+--pre_train ../pretrained/ShuffleNet_x2_G10R20_SE.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
 #python statistics.py --template ShuffleNet --scale 2 --patch_size 96 --test_only
 
-
+# LatticeNet
+#python statistics.py --template LatticeNet --scale 2 --patch_size 96 --test_only
+#python main.py --template LatticeNet --save LatticeNet_x2_LB4 --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template LatticeNet --scale 2 --patch_size 96 --test_only \
+#--pre_train ../pretrained/LatticeNet_x2_LB4.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900

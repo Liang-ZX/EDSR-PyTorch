@@ -20,11 +20,13 @@ class SplitSRBlock(nn.Module):
         if bn: modules_body.append(nn.BatchNorm2d(n_feat))
         modules_body.append(act)
         self.body = nn.Sequential(*modules_body)
+        self.se = SELayer(n_feat, reduction=16)
 
     def forward(self, x):
         active, passive = x[:, :self.alpha_channel], x[:, self.alpha_channel:]
         res = self.body(active)
         out = torch.cat([passive, res], dim=1)
+        out = self.se(out)
         return out
 
 
@@ -36,7 +38,7 @@ class ResidualBlock(nn.Module):
             modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
             if bn: modules_body.append(nn.BatchNorm2d(n_feat))
             if i == 0: modules_body.append(act)
-        modules_body.append(SELayer(n_feat, reduction=4))
+        modules_body.append(SELayer(n_feat, reduction=16))
         self.body = nn.Sequential(*modules_body)
 
     def forward(self, x):

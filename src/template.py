@@ -39,10 +39,11 @@ def set_template(args):
 
     if args.template.find('RCAN') >= 0:
         args.model = 'RCAN'
-        args.n_resgroups = 10 #10
-        args.n_resblocks = 20 #20
+        args.n_resgroups = 7 #10
+        args.n_resblocks = 7 #20
         args.n_feats = 16 #64
         args.chop = True
+        args.reduction = 4
 
     if args.template.find('SplitSR') >= 0:
         args.model = 'SplitSR'
@@ -65,6 +66,11 @@ def set_template(args):
         args.n_resblocks = 20
         args.n_feats = 16
         args.alpha_ratio = 0.5
+
+    if args.template.find('LatticeNet') >= 0:
+        args.model = 'LatticeNet'
+        args.n_feats = 16
+        args.num_LBs = 4
 
     if args.template.find('VDSR') >= 0:
         args.model = 'VDSR'
