@@ -96,6 +96,17 @@ parser.add_argument('--att_reduct', type=int, default=4,
                     help='number of attention(SE or CA) feature maps reduction')
 parser.add_argument('--att_type', type=str, default=None,
                     help='attention block type (SE | CA | None)')
+# Option for LatticeNet
+parser.add_argument('--num_LBs', type=int, default=4,
+                    help='number of Lattice Blocks')
+
+# Knowledge Distillation
+parser.add_argument('--teach_pretrain', type=str, default=None,
+                    help='pre-trained teacher model directory')
+parser.add_argument('--w_l1', type=float, default=1.0,
+                    help='learning rate')
+parser.add_argument('--w_at', type=float, default=1e+3,
+                    help='learning rate')
 
 # Training specifications
 parser.add_argument('--reset', action='store_true',
@@ -112,6 +123,8 @@ parser.add_argument('--self_ensemble', action='store_true',
                     help='use self-ensemble method for test')
 parser.add_argument('--test_only', action='store_true',
                     help='set this option to test the model')
+parser.add_argument('--test_pair', action='store_true',
+                    help='test pair for demo dir')
 parser.add_argument('--gan_k', type=int, default=1,
                     help='k value for adversarial loss')
 
@@ -157,6 +170,9 @@ parser.add_argument('--save_results', action='store_true',
                     help='save output results')
 parser.add_argument('--save_gt', action='store_true',
                     help='save low-resolution and high-resolution images together')
+
+parser.add_argument('--is_student', action='store_true',
+                    help='knowledge distillation')
 
 args = parser.parse_args()
 template.set_template(args)

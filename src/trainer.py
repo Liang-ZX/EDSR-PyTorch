@@ -87,6 +87,7 @@ class Trainer():
         for idx_data, d in enumerate(self.loader_test):
             for idx_scale, scale in enumerate(self.scale):
                 d.dataset.set_scale(idx_scale)
+                ssim_result = 0.
                 for lr, hr, filename in tqdm(d, ncols=80):
                     lr, hr = self.prepare(lr, hr)
                     torch.cuda.empty_cache()
@@ -97,6 +98,9 @@ class Trainer():
                     self.ckp.log[-1, idx_data, idx_scale] += utility.calc_psnr(
                         sr, hr, scale, self.args.rgb_range, dataset=d
                     )
+                    if self.args.test_only:
+                        ssim_result += utility.calc_ssim(sr, hr, scale, self.args.rgb_range, dataset=d)
+
                     if self.args.save_gt:
                         save_list.extend([lr, hr])
 
@@ -104,14 +108,16 @@ class Trainer():
                         self.ckp.save_results(d, filename[0], save_list, scale)
 
                 self.ckp.log[-1, idx_data, idx_scale] /= len(d)
+                ssim_result /= len(d)
                 best = self.ckp.log.max(0)
                 self.ckp.write_log(
-                    '[{} x{}]\tPSNR: {:.3f} (Best: {:.3f} @epoch {})'.format(
+                    '[{} x{}]\tPSNR: {:.3f} (Best: {:.3f} @epoch {})\tSSIM: {:.4f}'.format(
                         d.dataset.name,
                         scale,
                         self.ckp.log[-1, idx_data, idx_scale],
                         best[0][idx_data, idx_scale],
-                        best[1][idx_data, idx_scale] + 1
+                        best[1][idx_data, idx_scale] + 1,
+                        ssim_result
                     )
                 )
 

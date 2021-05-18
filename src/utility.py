@@ -15,6 +15,13 @@ import imageio
 import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lrs
+import torch.nn.functional as F
+
+from torchvision.utils import make_grid
+import cv2
+import pytorch_ssim
+# from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+# from skimage.metrics import structural_similarity as compare_ssim
 
 class timer():
     def __init__(self):
@@ -149,7 +156,7 @@ class checkpoint():
         if self.args.save_results:
             filename = self.get_path(
                 'results-{}'.format(dataset.dataset.name),
-                '{}_x{}_'.format(filename, scale)
+                '{}_{}_x{}_'.format(filename, self.args.model.lower(), scale)
             )
 
             postfix = ('SR', 'LR', 'HR')
@@ -179,6 +186,17 @@ def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
     mse = valid.pow(2).mean()
 
     return -10 * math.log10(mse)
+
+def calc_ssim(sr, hr, scale, rgb_range, dataset=None):
+    if hr.nelement() == 1: return 0
+    shave = scale
+    gray_coeffs = [65.738, 129.057, 25.064]
+    convert_s = sr.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
+    sr = sr.mul(convert_s).sum(dim=1).unsqueeze(0) + 16 * torch.ones_like(hr)
+    convert_h = hr.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
+    hr = hr.mul(convert_h).sum(dim=1).unsqueeze(0) + 16 * torch.ones_like(hr)
+    return pytorch_ssim.ssim(sr[..., shave:-shave, shave:-shave], hr[..., shave:-shave, shave:-shave],
+                             data_range=rgb_range, size_average=True)
 
 def make_optimizer(args, target):
     '''
@@ -234,4 +252,27 @@ def make_optimizer(args, target):
     optimizer = CustomOptimizer(trainable, **kwargs_optimizer)
     optimizer._register_scheduler(scheduler_class, **kwargs_scheduler)
     return optimizer
+
+
+def at(x):
+    return F.normalize(x.pow(2).mean(1).view(x.size(0), -1))
+
+
+def at2(x):
+    return F.normalize(x.mean(1).pow(2).view(x.size(0), -1))
+
+
+def at_loss(x, y, map_func=1):
+    if map_func == 1:
+        return (at(x) - at(y)).pow(2).mean()
+    else:
+        return (at2(x) - at2(y)).pow(2).mean()
+
+
+# multichannel
+def attention_loss(x, y, map_func=1):
+    loss = 0
+    for i in range(len(x)-1):
+        loss = loss + at_loss(x[i], y[i], map_func=map_func) #* (len(x) - i - 1)
+    return loss
 

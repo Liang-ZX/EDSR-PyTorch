@@ -49,9 +49,23 @@ def set_template(args):
         args.model = 'SplitSR'
         args.n_resgroups = 7
         args.n_resblocks = 7
-        args.n_feats = 16
+        args.n_feats = 16 #64
         args.alpha_ratio = 0.25
-        args.hybrid_index = 3
+        args.hybrid_index = 3 #7
+
+    if args.template.find('MySR') >= 0:
+        args.model = 'MySR'
+        args.n_resgroups = 6
+        args.n_resblocks = 4
+        args.n_feats = 48 #64
+        args.alpha_ratio = 0.25
+        args.hybrid_index = 4
+
+    if args.template.find('TeachSR') >= 0:
+        args.model = 'TeachSR'
+        args.n_resgroups = 6
+        args.n_resblocks = 12
+        args.n_feats = 64 #64
 
     if args.template.find('MobileSR') >= 0:
         args.model = 'MobileSR'

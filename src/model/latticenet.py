@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from model import common
 import torch.nn.functional as F
+from model.splitsr import ResidualBlock, SplitSRBlock
 
 
 def make_model(args, parent=False):
@@ -52,15 +53,62 @@ class CoffConv(nn.Module):
         return out
 
 
+class ResLBlock(nn.Module):
+    def __init__(self, num_fea):
+        super(ResLBlock, self).__init__()
+        conv = common.default_conv
+        H_modules = [
+            ResidualBlock(
+                conv, num_fea, kernel_size=3, bias=True, bn=False, act=nn.LeakyReLU(0.05))
+            # SplitSRBlock(
+            #     conv, num_fea, kernel_size=3, alpha=0.25, bias=True, bn=False, act=nn.LeakyReLU(0.05))
+            for _ in range(3)]
+        self.H_conv = nn.Sequential(*H_modules)
+
+        self.A1_coff_conv = CoffConv(num_fea)
+        self.B1_coff_conv = CoffConv(num_fea)
+
+        G_modules = [
+            ResidualBlock(
+                conv, num_fea, kernel_size=3, bias=True, bn=False, act=nn.LeakyReLU(0.05))
+            # SplitSRBlock(
+            #     conv, num_fea, kernel_size=3, alpha=0.25, bias=True, bn=False, act=nn.LeakyReLU(0.05))
+            for _ in range(3)]
+        self.G_conv = nn.Sequential(*G_modules)
+
+        self.A2_coff_conv = CoffConv(num_fea)
+        self.B2_coff_conv = CoffConv(num_fea)
+
+        self.fuse = nn.Conv2d(num_fea * 2, num_fea, 1, 1, 0)
+
+    def forward(self, x):
+        H = self.H_conv(x)
+        A1 = self.A1_coff_conv(H)
+        P1 = x + A1 * H
+        B1 = self.B1_coff_conv(x)
+        Q1 = H + B1 * x
+
+        G = self.G_conv(P1)
+        B2 = self.B2_coff_conv(G)
+        Q2 = Q1 + B2 * G
+        A2 = self.A2_coff_conv(Q1)
+        P2 = G + Q1 * A2
+
+        out = self.fuse(torch.cat([P2, Q2], dim=1))
+
+        return out
+
+
 class LBlock(nn.Module):
     def __init__(self, num_fea):
         super(LBlock, self).__init__()
+        mid_channel = 48 #num_fea #48
         self.H_conv = nn.Sequential(
-            nn.Conv2d(num_fea, 48, 3, 1, 1),
+            nn.Conv2d(num_fea, mid_channel, 3, 1, 1),
             nn.LeakyReLU(0.05),
-            nn.Conv2d(48, 48, 3, 1, 1),
+            nn.Conv2d(mid_channel, mid_channel, 3, 1, 1),
             nn.LeakyReLU(0.05),
-            nn.Conv2d(48, num_fea, 3, 1, 1),
+            nn.Conv2d(mid_channel, num_fea, 3, 1, 1),
             nn.LeakyReLU(0.05),
         )
 
@@ -68,11 +116,11 @@ class LBlock(nn.Module):
         self.B1_coff_conv = CoffConv(num_fea)
 
         self.G_conv = nn.Sequential(
-            nn.Conv2d(num_fea, 48, 3, 1, 1),
+            nn.Conv2d(num_fea, mid_channel, 3, 1, 1),
             nn.LeakyReLU(0.05),
-            nn.Conv2d(48, 48, 3, 1, 1),
+            nn.Conv2d(mid_channel, mid_channel, 3, 1, 1),
             nn.LeakyReLU(0.05),
-            nn.Conv2d(48, num_fea, 3, 1, 1),
+            nn.Conv2d(mid_channel, num_fea, 3, 1, 1),
             nn.LeakyReLU(0.05),
         )
 
@@ -128,7 +176,8 @@ class LatticeNet(nn.Module):
         super(LatticeNet, self).__init__()
         in_channels = args.n_colors
         out_channels = args.n_colors
-        num_fea = args.n_feats
+        # num_fea = args.n_feats
+        num_fea = 64 #TODO FOR LatticeNet
         upscale_factor = args.scale[0]
         num_LBs = args.num_LBs
         self.sub_mean = common.MeanShift(args.rgb_range)
@@ -144,7 +193,8 @@ class LatticeNet(nn.Module):
         # LBlocks
         LBs = []
         for i in range(num_LBs):
-            LBs.append(LBlock(num_fea))
+            LBs.append(LBlock(num_fea)) #TODO
+            # LBs.append(ResLBlock(num_fea))
         self.LBs = nn.ModuleList(LBs)
 
         # BFModule

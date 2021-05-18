@@ -19,6 +19,8 @@ class Loss(nn.modules.loss._Loss):
         self.n_GPUs = args.n_GPUs
         self.loss = []
         self.loss_module = nn.ModuleList()
+        self.w_l1 = args.w_l1
+        self.w_at = args.w_at
         for loss in args.loss.split('+'):
             weight, loss_type = loss.split('*')
             if loss_type == 'MSE':
@@ -66,12 +68,14 @@ class Loss(nn.modules.loss._Loss):
 
         if args.load != '': self.load(ckp.dir, cpu=args.cpu)
 
-    def forward(self, sr, hr):
+    def forward(self, sr, hr, att_loss=None):
         losses = []
         for i, l in enumerate(self.loss):
             if l['function'] is not None:
                 loss = l['function'](sr, hr)
                 effective_loss = l['weight'] * loss
+                if att_loss is not None:
+                    effective_loss = self.w_l1 * effective_loss + self.w_at * att_loss
                 losses.append(effective_loss)
                 self.log[-1, i] += effective_loss.item()
             elif l['type'] == 'DIS':

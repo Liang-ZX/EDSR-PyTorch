@@ -70,3 +70,51 @@ class StdLayer(nn.Module):
         y = self.std(x)
         y = self.branch_main(y)
         return x * y
+
+
+class MixLayer(nn.Module):
+    def __init__(self, num_fea, reduction=16):
+        super(MixLayer, self).__init__()
+        self.upper_branch = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(num_fea, num_fea // reduction, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(num_fea // reduction, num_fea, 1, padding=0, bias=True),
+            # nn.ReLU(inplace=True),
+            nn.Sigmoid()
+        )
+        self.std = std
+        self.lower_branch = nn.Sequential(
+            nn.Conv2d(num_fea, num_fea // reduction, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(num_fea // reduction, num_fea, 1, padding=0, bias=True),
+            # nn.ReLU(inplace=True),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        upper = self.upper_branch(x)
+        lower = self.std(x)
+        lower = self.lower_branch(lower)
+        y = torch.add(upper, lower) / 2
+        return x * y
+
+
+# contrast-aware channel attention module
+class CCALayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(CCALayer, self).__init__()
+
+        self.contrast = std
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv_du = nn.Sequential(
+            nn.Conv2d(channel, channel // reduction, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel // reduction, channel, 1, padding=0, bias=True),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        y = self.contrast(x) + self.avg_pool(x)
+        y = self.conv_du(y)
+        return x * y

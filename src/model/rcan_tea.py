@@ -1,10 +1,8 @@
 # ECCV-2018-Image Super-Resolution Using Very Deep Residual Channel Attention Networks
 # https://arxiv.org/abs/1807.02758
 from model import common
-from attention.coordatt import CoordAtt
-from attention.cbam import CBAM
 from attention.esa import ESA, ESAplus, ESA_CEA
-from attention.se_attention import StdLayer, MixLayer
+from attention.se_attention import StdLayer
 
 import torch.nn as nn
 
@@ -45,14 +43,8 @@ class RCAB(nn.Module):
             modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
             if bn: modules_body.append(nn.BatchNorm2d(n_feat))
             if i == 0: modules_body.append(act)
-        # modules_body.append(CALayer(n_feat, reduction))
-        # modules_body.append(CoordAtt(n_feat, n_feat, reduction))
-        # modules_body.append(StdLayer(n_feat, reduction))
-        # modules_body.append(MixLayer(n_feat, reduction))
-        modules_body.append(CBAM(n_feat, reduction, pool_types=['std']))
+        modules_body.append(CALayer(n_feat, reduction))
         # modules_body.append(ESA(n_feat, reduction))
-        # modules_body.append(ESAplus(n_feat, reduction))
-        # modules_body.append(ESA_CEA(n_feat, reduction))
         self.body = nn.Sequential(*modules_body)
         self.res_scale = res_scale
 
@@ -86,11 +78,11 @@ class RCAN(nn.Module):
     def __init__(self, args, conv=common.default_conv, is_teacher=False):
         super(RCAN, self).__init__()
 
-        n_resgroups = args.n_resgroups  #10
-        n_resblocks = args.n_resblocks  #20
-        n_feats = args.n_feats  #64
+        n_resgroups = 10
+        n_resblocks = 20
+        n_feats = 64
         kernel_size = 3
-        reduction = args.reduction  #16
+        reduction = 16
         scale = args.scale[0]
         act = nn.ReLU(True)
         self.is_teacher = is_teacher

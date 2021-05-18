@@ -2,31 +2,63 @@
 # The code is written based on RCAN
 #
 from model import common
-from attention.esa import ESA
+from attention.esa import ESA, ESAplus, Scale
 
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 
 
-def make_model(args, parent=False):
-    return SplitSR(args)
+def make_model(args, is_teacher=False):
+    return SplitSR(args, is_teacher=is_teacher)
 
 
 class SplitSRBlock(nn.Module):
     def __init__(self, conv, n_feat, kernel_size, alpha, bias=True, bn=False, act=nn.ReLU(True)):
         super(SplitSRBlock, self).__init__()
         self.alpha_channel = int(n_feat * alpha)
-        modules_body = [conv(self.alpha_channel, self.alpha_channel, kernel_size, bias=bias)]
-        if bn: modules_body.append(nn.BatchNorm2d(n_feat))
-        modules_body.append(act)
-        self.body = nn.Sequential(*modules_body)
-        self.esa = ESA(n_feat, reduction=4)
+        self.conv = conv(self.alpha_channel, self.alpha_channel, kernel_size, bias=bias)
+        # if bn: modules_body.append(nn.BatchNorm2d(n_feat))
+        self.act = act
+        # self.body = nn.Sequential(*modules_body)
+        self.esa = ESA(n_feat, reduction=16)
         # self.std = StdLayer(self.alpha_channel, reduction=self.alpha_channel)
         # self.se = SELayer(n_feat, reduction=16)  # TODO for SplitSR_SE_beta
 
     def forward(self, x):
         active, passive = x[:, :self.alpha_channel], x[:, self.alpha_channel:]
-        res = self.body(active)
+        res = self.conv(active)
+        res += active
+        res = self.act(res)
+        # res = self.std(res)
+        out = torch.cat([passive, res], dim=1)
+        out = self.esa(out)
+        # out = self.std(out)
+        # out = self.se(out)  # TODO for SplitSR_SE_beta
+        return out
+
+
+class LearnAlphaBlock(nn.Module):
+    def __init__(self, conv, n_feat, kernel_size, alpha, bias=True, bn=False, act=nn.ReLU(True)):
+        super(LearnAlphaBlock, self).__init__()
+        self.alpha = nn.Parameter(torch.FloatTensor([0.25]))
+        self.n_feat = n_feat
+        self.conv = conv
+        self.conv = conv(self.alpha_channel, self.alpha_channel, kernel_size, bias=bias)
+        # if bn: modules_body.append(nn.BatchNorm2d(n_feat))
+        self.act = act
+        # self.body = nn.Sequential(*modules_body)
+        self.esa = ESA(n_feat, reduction=16)
+        # self.std = StdLayer(self.alpha_channel, reduction=self.alpha_channel)
+        # self.se = SELayer(n_feat, reduction=16)  # TODO for SplitSR_SE_beta
+
+    def forward(self, x):
+        alpha_channel = int(self.alpha * self.n_feat)
+        active, passive = x[:, :alpha_channel], x[:, alpha_channel:]
+        # F.conv2d(active, )
+        res = self.conv(active)
+        res += active
+        res = self.act(res)
         # res = self.std(res)
         out = torch.cat([passive, res], dim=1)
         out = self.esa(out)
@@ -45,7 +77,7 @@ class ResidualBlock(nn.Module):
             if i == 0: modules_body.append(act)
         # modules_body.append(SELayer(n_feat, reduction=16))
         # modules_body.append(StdLayer(n_feat, reduction=4))
-        modules_body.append(ESA(n_feat, reduction=4))
+        modules_body.append(ESAplus(n_feat, reduction=16))
         self.body = nn.Sequential(*modules_body)
 
     def forward(self, x):
@@ -89,15 +121,16 @@ class SplitGroup(nn.Module):
 
 
 class SplitSR(nn.Module):
-    def __init__(self, args, conv=common.default_conv):
+    def __init__(self, args, conv=common.default_conv, is_teacher=False):
         super(SplitSR, self).__init__()
 
-        n_resgroups = args.n_resgroups
-        n_resblocks = args.n_resblocks
-        n_feats = args.n_feats
+        self.is_teacher = is_teacher
+        self.n_resgroups = 6  # args.n_resgroups
+        n_resgroups = 6  # args.n_resgroups
+        n_resblocks = 12  # args.n_resblocks
+        n_feats = 64  # args.n_feats
         kernel_size = 3
-        alpha_ratio = args.alpha_ratio
-        hybrid_index = args.hybrid_index
+        # hybrid_index = args.hybrid_index
         scale = args.scale[0]
         act = nn.ReLU(True)
 
@@ -107,19 +140,14 @@ class SplitSR(nn.Module):
         # define head module
         modules_head = [conv(args.n_colors, n_feats, kernel_size)]
 
-        modules_body = [
-            SplitGroup(
-                conv, n_feats, kernel_size, alpha_ratio, act=act, n_resblocks=n_resblocks) \
-            for _ in range(hybrid_index)]
+        modules_body = [StandardGroup(conv, n_feats, kernel_size, act=act, n_resblocks=n_resblocks)
+                             for _ in range(n_resgroups)]
 
-        # define body module
-        for _ in range(n_resgroups - hybrid_index):
-            modules_body.append(
-                StandardGroup(
-                    conv, n_feats, kernel_size, act=act, n_resblocks=n_resblocks)
-            )
+        modules_fusion = [conv(2 * n_feats, n_feats, kernel_size=1)
+                          for _ in range(n_resgroups-1)]
 
-        modules_body.append(conv(n_feats, n_feats, kernel_size))
+        self.lrelu = nn.LeakyReLU(True)
+        self.LR_conv = conv(n_feats, n_feats, kernel_size=3)
 
         # define tail module
         modules_tail = [
@@ -130,20 +158,35 @@ class SplitSR(nn.Module):
 
         self.head = nn.Sequential(*modules_head)
         self.body = nn.Sequential(*modules_body)
+        self.fusion = nn.Sequential(*modules_fusion)
         self.tail = nn.Sequential(*modules_tail)
 
     def forward(self, x):
         x = self.sub_mean(x)
         x = self.head(x)
 
-        res = self.body(x)
-        res += x
-        out = res
+        last_B = x
+        out_B = []
+        # out_F = []
+        for i in range(self.n_resgroups):
+            last_B = (self.body[i])(last_B)
+            out_B.append(last_B)
+            # if i % 2 == 1:
+            #     out_F.append(last_B)
+
+        last_M = out_B[0]
+        for i in range(self.n_resgroups-1):
+            last_M = (self.fusion[i])(torch.cat([last_M, out_B[i+1]], dim=1))
+
+        # out_B = self.r6(torch.cat([out_M5, out_B6], dim=1))
+        # out_B = self.c(torch.cat([out_B0, out_B1, out_B2, out_B3, out_B4, out_B5, out_B6], dim=1))
+        res = self.LR_conv(last_M) + x
+        # out = res
         x = self.tail(res)
         x = self.add_mean(x)
 
-        if self.training:
-            return x#, out
+        if self.is_teacher:
+            return x, out_B
         else:
             return x
 

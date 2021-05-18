@@ -61,17 +61,18 @@
 #python main.py --template RCAN --save RCAN_BIX2_G10R20P48 --scale 2 --reset --patch_size 96 --gpu_id 3 --epochs 200
 #python main.py --template RCAN --save RCAN_BIX2_C16G7R7_reduct4 --scale 2 --reset --patch_size 96 --epochs 300 --reduction 4
 #python main.py --template RCAN --save RCAN_BIX2_C16G7R7_CA_x4 --scale 4 --reset --patch_size 192 --epochs 300 --reduction 4
-#python statistics.py --template RCAN --scale 2 --patch_size 96 --reduction 4 --test_only --gpu_id 1
+#python statistics.py --template RCAN --scale 2 --patch_size 96 --test_only --gpu_id 1
 
-python main.py --template RCAN --save RCAN_BIX2_C16G7R7_Std --scale 2 --reset --patch_size 96 --epochs 300
-
+python main.py --template RCAN --save RCAN_BIX2_C16G7R7_ESA3 --scale 2 --reset --patch_size 96 --epochs 300 # Std+ESA
+python main.py --template RCAN --save RCAN_BIX2_C16G7R7_ESA4 --scale 2 --reset --patch_size 96 --epochs 300 # ESAplus
+python main.py --template RCAN --save RCAN_BIX2_C16G7R7_ESA_CEA --scale 2 --reset --patch_size 96 --epochs 300
 #python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
 #--pre_train ../pretrained/RCAN_BIX2_G10R20_CA.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
 #python main.py --template RCAN --scale 2 --patch_size 96 --test_only --reduction 4 \
 #--pre_train ../pretrained/RCAN_BIX2_C16G7R7_reduct4.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
 
-#python main.py --template RCAN --scale 2 --patch_size 96 --test_only --pre_train ../pretrained/RCAN_BIX2.pt \
-#--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --self_ensemble
+CUDA_VISIBLE_DEVICES=3 python main.py --template RCAN --scale 2 --patch_size 96 --test_only \
+--data_test Set5+Set14+B100+Urban100+DIV2K --data_range 801-900 --pre_train ../pretrained/RCAN_BIX2_C16G7R7_CBAM_Std.pt
 
 # RCAN_BIX3_G10R20P48, input=48x48, output=144x144
 #python main.py --template RCAN --save RCAN_BIX3_G10R20P48 --scale 3 --reset --save_results --patch_size 144 --pre_train ../experiment/model/RCAN_BIX2.pt
@@ -81,11 +82,21 @@ python main.py --template RCAN --save RCAN_BIX2_C16G7R7_Std --scale 2 --reset --
 #python main.py --template RCAN --save RCAN_BIX8_G10R20P48 --scale 8 --reset --save_results --patch_size 384 --pre_train ../experiment/model/RCAN_BIX2.pt
 
 # SplitSR
-#python main.py --template SplitSR --save SplitSR_x2_C16G7R7_SE --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template SplitSR --save SplitSR_x2_C16G7R7_ESA --scale 2 --reset --patch_size 96 --epochs 300
 #python main.py --template SplitSR --save SplitSR_x2_C16G7R7P48 --scale 2 --reset --patch_size 96 --gpu_id 2 --epochs 400 --n_feats 16
 #python statistics.py --template SplitSR --scale 2 --patch_size 96 --test_only # --n_feats 16
-#python main.py --template SplitSR --scale 2 --patch_size 96 --test_only \
-#--pre_train ../pretrained/SplitSR_x2_C16G7R7_SE.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+python main.py --template SplitSR --scale 2 --patch_size 96 --test_only \
+--pre_train ../pretrained/SplitSR_x2_C16G7R7_ESA.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+# MySR
+#python main.py --template MySR --save MySR_x2_C48G6R4H3_ESAplus_HFF --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template MySR --save MySR_x4_C48G6R4H4_ESAplus --scale 4 --epochs 300
+#python statistics.py --template MySR --scale 2 --patch_size 96 --test_only
+python main.py --template MySR --scale 2 --patch_size 96 --test_only \
+--pre_train ../pretrained/MySR_x2_C48G6R4H3_ESAplus_HFF.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-810
+
+python main.py --template MySR --scale 4 --test_only --pre_train ../pretrained/MySR_x4_C48G6R4H4_ESAplus.pt \
+--data_test Set5+Set14+B100+Urban100+DIV2K --data_range 801-900 --patch_size 96
 
 # MobileSR
 #python statistics.py --template MobileSR --scale 2 --patch_size 96 --test_only --gpu_id 0 --n_feats 16 --att_type CA # > ../model_param/InvertedBlock_x2_C16G7R7_CA.log
@@ -105,6 +116,65 @@ python main.py --template ShuffleNet --scale 2 --patch_size 96 --test_only \
 
 # LatticeNet
 #python statistics.py --template LatticeNet --scale 2 --patch_size 96 --test_only
-#python main.py --template LatticeNet --save LatticeNet_x2_LB4 --scale 2 --reset --patch_size 96 --epochs 300
-#python main.py --template LatticeNet --scale 2 --patch_size 96 --test_only \
-#--pre_train ../pretrained/LatticeNet_x2_LB4.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+python main.py --template LatticeNet --save LatticeNet_x2_C64LB4_600 --scale 2 --epochs 300 --patch_size 96 --pre_train ../pretrained/LatticeNet_x2_C64LB4.pt
+python main.py --template LatticeNet --scale 2 --test_only --pre_train ../pretrained/LatticeNet_x2_C64LB4_600.pt \
+--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --patch_size 96
+
+# IMDN
+python main.py --model IMDN --save IMDN_x2_C64_600 --scale 2 --reset --patch_size 96 --epochs 300 --pre_train ../pretrained/IMDN_x2_C64.pt
+python main.py --model IMDN --save IMDN_x4_C64 --scale 4 --reset --epochs 300
+python main.py --model IMDN --test_only --pre_train ../pretrained/IMDN_x2_C64_600.pt \
+--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --scale 4 --patch_size 96
+
+# RFDN
+#python main.py --model RFDN --save RFDN_paper_x4_C48 --scale 4 --reset --epochs 300 --patch_size 96
+python main.py --model RFDN --save RFDN_paper_x2_C48_600 --scale 2 --epochs 300 --patch_size 96 --pre_train ../pretrained/RFDN_paper_x2_C48.pt
+#python statistics.py --model RFDN --scale 2 --patch_size 96 --test_only
+python main.py --model RFDN --scale 4 --patch_size 96 --test_only \
+--pre_train ../pretrained/RFDN_paper_x4_C48.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+# MAFFSRN
+python main.py --model MAFFSRN --save MAFFSRN_x2_C32FFG4_600 --scale 2 --reset --patch_size 96 --epochs 300 --pre_train ../pretrained/MAFFSRN_x2_C32FFG4.pt
+python main.py --model MAFFSRN --save MAFFSRN_x4_C32FFG4 --scale 4 --reset --epochs 300
+#python statistics.py --model MAFFSRN --scale 2 --patch_size 96 --test_only
+python main.py --model MAFFSRN --scale 2 --test_only --pre_train ../pretrained/MAFFSRN_x2_C32FFG4_600.pt \
+--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900 --patch_size 96
+
+# CARN
+#python statistics.py --model CARN --scale 2 --patch_size 96 --test_only
+#python main.py --model CARN --save CARN_x2_C64_600 --scale 2 --patch_size 96 --epochs 300 --pre_train ../pretrained/CARN_x2_C64.pt
+python main.py --model CARN_M --save CARN_M_x4_C64 --scale 4 --reset --epochs 300
+python main.py --model CARN --save CARN_x4_C64 --scale 4 --reset --epochs 300
+#python main.py --model CARN_M --scale 2 --patch_size 96 --test_only \
+#--pre_train ../pretrained/CARN_M_x2_C64.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+python main.py --model CARN_M --scale 2 --test_only --pre_train ../pretrained/CARN_x2_C64_600.pt \
+--data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900  --patch_size 96
+
+python knowledge_distill.py --template MySR_old --save MySR_x2_C64G6R12_teach_at2_V7 --scale 2 --teach_pretrain ../pretrained/TeachSR_x2_C64G6R12.pt \
+--reset --patch_size 96 --epochs 300 --w_at 1e+3 --pre_train ../pretrained/MySR_x2_C48G6R4H4_ESAplus.pt
+
+python knowledge_distill.py --template MySR_old --save MySR_x2_C48G12R8_teach_at2_V2 --scale 2 --teach_pretrain ../pretrained/TeachSR_x2_C48G12R8.pt \
+--patch_size 96 --epochs 300 --w_at 1e+3 --pre_train ../pretrained/MySR_x2_C48G6R4H4_ESAplus.pt
+
+python statistics.py --template TeachSR --scale 2 --patch_size 96 --test_only
+python main.py --template TeachSR --save TeachSR_x2_C64G6R12 --scale 2 --reset --patch_size 96 --epochs 300
+#python main.py --template TeachSR --save TeachSR_x2_C64G6R12_600 --scale 2 --patch_size 96 --epochs 300 --pre_train ../pretrained/TeachSR_x2_C64G6R12.pt
+python main.py --template TeachSR --scale 2 --patch_size 96 --test_only \
+--pre_train ../pretrained/TeachSR_x2_C48G12R8.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+python main.py --model SRCNN --save SRCNN_x2 --scale 2 --reset --patch_size 96 --epochs 300
+python statistics.py --model SRCNN --scale 2 --patch_size 96 --test_only
+python main.py --model SRCNN --scale 2 --patch_size 96 --test_only \
+--pre_train ../pretrained/SRCNN_x2.pt --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+python main.py --model Bicubic --scale 2 --patch_size 96 --test_only --data_test DIV2K+Set5+Set14+B100+Urban100 --data_range 801-900
+
+python main.py --template MySR_old --data_test Demo --scale 2 --pre_train ../pretrained/MySR_x2_C48G6R4H4_ESAplus.pt --test_only --save_results --test_pair
+
+python main.py --template MySR_old --data_test Demo --scale 2 --test_only --save_results --test_pair \
+--pre_train ../pretrained/MySR_x2_C64G6R12_teach_at2_V2.pt
+
+python main.py --model RFDN --data_test Demo --scale 4 --test_only --save_results --test_pair \
+--pre_train ../pretrained/RFDN_paper_x4_C48.pt
+
+

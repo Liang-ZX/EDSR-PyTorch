@@ -1,8 +1,7 @@
 # The code is written based on RCAN
 #
 from model import common
-from model.se_attention import SELayer
-from model.coordatt import CoordAtt, h_swish
+from attention.se_attention import SELayer
 
 import torch.nn as nn
 import torch

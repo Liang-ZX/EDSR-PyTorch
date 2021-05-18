@@ -22,17 +22,33 @@ class h_swish(nn.Module):
         return x * self.sigmoid(x)
 
 
+def std_h(x):
+    assert(x.dim() == 4)
+    x_mean = x.sum(3, keepdim=True) / x.shape[3]
+    x_var = (x - x_mean).pow(2).sum(3, keepdim=True) / x.shape[3]
+    return x_var.pow(0.5)
+
+
+def std_w(x):
+    assert (x.dim() == 4)
+    x_mean = x.sum(2, keepdim=True) / x.shape[2]
+    x_var = (x - x_mean).pow(2).sum(2, keepdim=True) / x.shape[2]
+    return x_var.pow(0.5)
+
+
 class CoordAtt(nn.Module):
     def __init__(self, inp, oup, reduction=16):
         super(CoordAtt, self).__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+        # self.pool_h = std_h
+        # self.pool_w = std_w
 
-        mip = max(8, inp // reduction)
-        # mip = inp // reduction
+        # mip = max(8, inp // reduction)
+        mip = inp // reduction
 
         self.conv1 = nn.Conv2d(inp, mip, kernel_size=1, stride=1, padding=0, bias=True)
-        # self.bn1 = nn.BatchNorm2d(mip)
+        self.bn1 = nn.BatchNorm2d(mip)
         self.act = h_swish()
         
         self.conv_h = nn.Conv2d(mip, oup, kernel_size=1, stride=1, padding=0, bias=True)
